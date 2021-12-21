@@ -105,15 +105,19 @@ impl<I: Iterator<Item = char> + Clone, T, S: Default, E, W> Lexer<I, T, S, E, W>
 
 impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
     pub fn new_with_state(iter: I, state: S) -> Self {
+        Self::new_with_location_and_state(iter, Loc::ZERO, state)
+    }
+
+    pub fn new_with_location_and_state(iter: I, iter_loc: Loc, state: S) -> Self {
         Self {
             __state: 0,
             __done: false,
             __initial_state: 0,
             user_state: state,
-            iter_loc: Loc::ZERO,
+            iter_loc,
             iter: iter.peekable(),
-            current_match_start: Loc::ZERO,
-            current_match_end: Loc::ZERO,
+            current_match_start: iter_loc,
+            current_match_end: iter_loc,
             last_match: None,
         }
     }

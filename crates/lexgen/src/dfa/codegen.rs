@@ -145,6 +145,15 @@ pub fn reify(
                 #lexer_name(::lexgen_util::Lexer::new_with_state(iter, user_state))
             }
 
+            #visibility fn new_with_location_and_state(
+                iter: I,
+                loc: ::lexgen_util::Loc,
+                user_state: #user_state_type,
+            ) -> Self
+            {
+                #lexer_name(::lexgen_util::Lexer::new_with_location_and_state(iter, loc, user_state))
+            }
+
             //
             // Methods below for using in semantic actions
             //
