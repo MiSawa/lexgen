@@ -15,6 +15,7 @@ use lexgen::lexer;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 #[derive(Debug, PartialEq, Eq, Clone)]
 enum Token<'input> {
     Plus,
@@ -551,3 +552,4 @@ fn lex_lua_files() {
     }
     println!("{} tokens", i);
 }
+*/

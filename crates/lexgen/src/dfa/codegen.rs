@@ -132,12 +132,23 @@ pub fn reify(
             #(#rule_name_idents,)*
         }
 
-        #visibility struct #lexer_name<'input>(
-            ::lexgen_util::Lexer<'input, #token_type, #user_state_type, #error_type, #lexer_name<'input>>
+        #visibility struct #lexer_name<I: ::std::iter::Iterator<Item = char> + ::std::clone::Clone>(
+            ::lexgen_util::Lexer<I, #token_type, #user_state_type, #error_type, #lexer_name<I>>
         );
 
-        // Methods below for using in semantic actions
-        impl<'input> #lexer_name<'input> {
+        impl<I: ::std::iter::Iterator<Item = char> + ::std::clone::Clone> #lexer_name<I> {
+            #visibility fn new(iter: I) -> Self {
+                #lexer_name(::lexgen_util::Lexer::new(iter))
+            }
+
+            #visibility fn new_with_state(iter: I, user_state: #user_state_type) -> Self {
+                #lexer_name(::lexgen_util::Lexer::new_with_state(iter, user_state))
+            }
+
+            //
+            // Methods below for using in semantic actions
+            //
+
             fn switch_and_return<T>(&mut self, rule: #rule_name_enum_name, token: T) -> ::lexgen_util::SemanticActionResult<T> {
                 self.switch::<T>(rule);
                 ::lexgen_util::SemanticActionResult::Return(token)
@@ -161,8 +172,8 @@ pub fn reify(
                 self.0.reset_match()
             }
 
-            fn match_(&self) -> &'input str {
-                self.0.match_()
+            fn match_loc(&self) -> (::lexgen_util::Loc, ::lexgen_util::Loc) {
+                self.0.match_loc()
             }
 
             fn peek(&mut self) -> Option<char> {
@@ -170,21 +181,11 @@ pub fn reify(
             }
         }
 
-        impl<'input> #lexer_name<'input> {
-            #visibility fn new(input: &'input str) -> Self {
-                #lexer_name(::lexgen_util::Lexer::new(input))
-            }
-
-            #visibility fn new_with_state(input: &'input str, user_state: #user_state_type) -> Self {
-                #lexer_name(::lexgen_util::Lexer::new_with_state(input, user_state))
-            }
-        }
-
         #(#search_tables)*
         #binary_search_fn
         #semantic_action_fns
 
-        impl<'input> Iterator for #lexer_name<'input> {
+        impl<I: ::std::iter::Iterator<Item = char> + ::std::clone::Clone> Iterator for #lexer_name<I> {
             type Item = Result<(::lexgen_util::Loc, #token_type, ::lexgen_util::Loc), ::lexgen_util::LexerError<#error_type>>;
 
             fn next(&mut self) -> Option<Self::Item> {
@@ -546,19 +547,19 @@ fn generate_semantic_action_fns(
 
             let rhs = match action {
                 RuleRhs::None => {
-                    quote!(|__lexer: &mut #lexer_name| __lexer.continue_().map_token(Ok))
+                    quote!(|__lexer: &mut #lexer_name<I>| __lexer.continue_().map_token(Ok))
                 }
 
                 RuleRhs::Rhs { expr, kind } => {
                     match kind {
                         RuleKind::Simple => {
-                            quote!(|__lexer: &mut #lexer_name| __lexer.return_(#expr).map_token(Ok))
+                            quote!(|__lexer: &mut #lexer_name<I>| __lexer.return_(#expr).map_token(Ok))
                         }
                         RuleKind::Fallible => quote!(#expr),
                         RuleKind::Infallible => {
-                            quote!(|__lexer: &mut #lexer_name| {
+                            quote!(|__lexer| {
                                 let semantic_action:
-                                    for<'lexer, 'input> fn(&'lexer mut #lexer_name<'input>) -> ::lexgen_util::SemanticActionResult<#token_type> =
+                                    fn(&'lexer mut #lexer_name<I>) -> ::lexgen_util::SemanticActionResult<#token_type> =
                                         #expr;
 
                                 semantic_action(__lexer).map_token(Ok)
@@ -570,8 +571,13 @@ fn generate_semantic_action_fns(
 
             quote!(
                 #[allow(non_upper_case_globals)]
-                static #ident: for<'lexer, 'input> fn(&'lexer mut #lexer_name<'input>) -> #semantic_action_fn_ret_ty =
-                    #rhs;
+                fn #ident<
+                    'lexer,
+                    I: ::std::iter::Iterator<Item = char> + ::std::clone::Clone,
+                >(__lexer: &'lexer mut #lexer_name<I>) -> #semantic_action_fn_ret_ty
+                {
+                    (#rhs)(__lexer)
+                }
             )
         })
         .collect();
