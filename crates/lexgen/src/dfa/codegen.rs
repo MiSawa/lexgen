@@ -570,7 +570,7 @@ fn generate_semantic_action_fns(
             };
 
             quote!(
-                #[allow(non_upper_case_globals)]
+                #[allow(non_snake_case)]
                 fn #ident<
                     'lexer,
                     I: ::std::iter::Iterator<Item = char> + ::std::clone::Clone,
