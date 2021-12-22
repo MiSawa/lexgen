@@ -34,7 +34,7 @@ fn failure_confusion_1() {
         },
 
         _ => |lexer| {
-            let char = lexer.match_().chars().next_back().unwrap();
+            let char = lexer.match_().chars().peekable().next_back().unwrap();
             println!("wildcard matched {:?}", char);
             lexer.state().buf.push(char);
             lexer.continue_()
@@ -95,7 +95,7 @@ fn failure_confusion_2() {
         }
     }
 
-    let mut lexer = Lexer::new("(* * *) (* (* ** *) *)".chars());
+    let mut lexer = Lexer::new("(* * *) (* (* ** *) *)".chars().peekable());
     assert_eq!(lexer.next(), None);
 }
 
@@ -109,7 +109,7 @@ fn failure_confusion_3_1() {
         _ = 2,
     }
 
-    let mut lexer = Lexer::new("a ab abc".chars());
+    let mut lexer = Lexer::new("a ab abc".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(2)));
     assert_eq!(next(&mut lexer), Some(Ok(0)));
     assert_eq!(next(&mut lexer), Some(Ok(1)));
@@ -131,7 +131,7 @@ fn failure_confusion_3_2() {
         ',' = 2,
     }
 
-    let mut lexer = Lexer::new("f,".chars());
+    let mut lexer = Lexer::new("f,".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), Some(Ok(2)));
     assert_eq!(next(&mut lexer), None);
@@ -148,7 +148,7 @@ fn failure_confusion_4() {
         _ = 3,
     }
 
-    let mut lexer = Lexer::new("aaa aa a".chars());
+    let mut lexer = Lexer::new("aaa aa a".chars().peekable());
 
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), Some(Ok(2)));
@@ -164,13 +164,13 @@ fn continue_confusion_1() {
         _,
     }
 
-    let mut lexer = Lexer::new("".chars());
+    let mut lexer = Lexer::new("".chars().peekable());
     assert_eq!(lexer.next(), None);
 
-    let mut lexer = Lexer::new("a".chars());
+    let mut lexer = Lexer::new("a".chars().peekable());
     assert_eq!(lexer.next(), None);
 
-    let mut lexer = Lexer::new("aaa".chars());
+    let mut lexer = Lexer::new("aaa".chars().peekable());
     assert_eq!(lexer.next(), None);
 }
 
@@ -195,10 +195,10 @@ fn continue_confusion_2() {
         }
     }
 
-    let mut lexer = Lexer::new("a".chars());
+    let mut lexer = Lexer::new("a".chars().peekable());
     assert!(matches!(lexer.next(), Some(Err(_))));
 
-    let mut lexer = Lexer::new("aa".chars());
+    let mut lexer = Lexer::new("aa".chars().peekable());
     assert!(matches!(lexer.next(), Some(Err(_))));
 }
 
@@ -371,7 +371,7 @@ fn range_any_overlap_issue_31() {
     }
 
     let input = "'a'";
-    let mut lexer = Lexer::new(input.chars());
+    let mut lexer = Lexer::new(input.chars().peekable());
     assert_eq!(lexer.next(), Some(Ok((loc(0, 0, 0), 1, loc(0, 3, 3)))));
     assert_eq!(lexer.next(), None);
 }

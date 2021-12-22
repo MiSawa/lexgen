@@ -41,7 +41,7 @@ fn readme_1() {
     }
 
     // Generated lexers are initialized with a `&str` for the input
-    let mut lexer = Lexer::new(" abc123Q-t  z9_9".chars());
+    let mut lexer = Lexer::new(" abc123Q-t  z9_9".chars().peekable());
 
     // Lexers implement `Iterator<Item=Result<(Loc, T, Loc), LexerError>>`,
     // where `T` is the token type specified in the lexer definition (`Token` in
@@ -110,7 +110,7 @@ fn readme_2() {
         }
     }
 
-    let mut lexer = Lexer::new("[[ [=[ [==[".chars());
+    let mut lexer = Lexer::new("[[ [=[ [==[".chars().peekable());
     assert_eq!(
         lexer.next(),
         Some(Ok((
@@ -188,7 +188,7 @@ fn simple() {
 
     use lexer::{Lexer, Token};
 
-    let mut lexer = Lexer::new(" abc123Q-t  z9_9".chars());
+    let mut lexer = Lexer::new(" abc123Q-t  z9_9".chars().peekable());
     assert_eq!(
         lexer.next(),
         Some(Ok((
@@ -254,7 +254,7 @@ fn simple() {
 //        }
 //    }
 //
-//    let mut lexer = Lexer::new("  /* test  */  /* /* nested comments!! */ */".chars());
+//    let mut lexer = Lexer::new("  /* test  */  /* /* nested comments!! */ */".chars().peekable());
 //    assert_eq!(
 //        lexer.next(),
 //        Some(Ok((loc(0, 2, 2), Token::Comment, loc(0, 13, 13))))
@@ -385,7 +385,7 @@ fn rule_kind_simple() {
         ')' = Token::RParen,
     }
 
-    let mut lexer = Lexer::new("(())".chars());
+    let mut lexer = Lexer::new("(())".chars().peekable());
     assert_eq!(
         lexer.next(),
         Some(Ok((loc(0, 0, 0), Token::LParen, loc(0, 1, 1))))
@@ -431,7 +431,7 @@ fn rule_kind_fallible_no_lifetimes() {
         },
     }
 
-    let mut lexer = Lexer::new("123 blah".chars());
+    let mut lexer = Lexer::new("123 blah".chars().peekable());
     assert_eq!(
         lexer.next(),
         Some(Ok((loc(0, 0, 0), Token::Int(123), loc(0, 3, 3))))
@@ -569,7 +569,7 @@ fn overlapping_ranges_1() {
         'c' '6' = 6,
     }
 
-    let mut lexer = Lexer::new("a1 b1 a2 b2 b3 c3 a4 b5 c6".chars());
+    let mut lexer = Lexer::new("a1 b1 a2 b2 b3 c3 a4 b5 c6".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(1))); // a1
     assert_eq!(next(&mut lexer), Some(Ok(1))); // b1
     assert_eq!(next(&mut lexer), Some(Ok(2))); // a2
@@ -596,7 +596,7 @@ fn overlapping_ranges_2() {
         'c' = 6,
     }
 
-    let mut lexer = Lexer::new("a b c".chars());
+    let mut lexer = Lexer::new("a b c".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), Some(Ok(2)));
     assert_eq!(next(&mut lexer), Some(Ok(3)));
@@ -650,7 +650,7 @@ fn builtin_alphabetic() {
     }
 
     // Test characters copied from Rust std documentation
-    let mut lexer = Lexer::new("a 京 💝".chars());
+    let mut lexer = Lexer::new("a 京 💝".chars().peekable());
     assert_eq!(lexer.next(), Some(Ok((loc(0, 0, 0), (), loc(0, 1, 1)))));
     assert_eq!(lexer.next(), Some(Ok((loc(0, 2, 2), (), loc(0, 4, 5)))));
     assert!(matches!(next(&mut lexer), Some(Err(_))));
@@ -665,7 +665,7 @@ fn builtin_alphanumeric() {
         $$alphanumeric = (),
     }
 
-    let mut lexer = Lexer::new("٣ 7 ৬ ¾ ① K و 藏".chars());
+    let mut lexer = Lexer::new("٣ 7 ৬ ¾ ① K و 藏".chars().peekable());
     assert_eq!(lexer.next(), Some(Ok((loc(0, 0, 0), (), loc(0, 1, 2))))); // 2 bytes
     assert_eq!(lexer.next(), Some(Ok((loc(0, 2, 3), (), loc(0, 3, 4)))));
     assert_eq!(lexer.next(), Some(Ok((loc(0, 4, 5), (), loc(0, 5, 8))))); // 3 bytes
@@ -690,7 +690,7 @@ fn builtin_ascii() {
         let mut str = String::new();
         str.push(c);
 
-        let mut lexer = Lexer::new(str.chars());
+        let mut lexer = Lexer::new(str.chars().peekable());
         assert_eq!(next(&mut lexer), Some(Ok(())));
     }
 }
@@ -764,11 +764,11 @@ fn end_of_input_transition_1() {
         'a' = 3,
     }
 
-    let mut lexer = Lexer::new("".chars());
+    let mut lexer = Lexer::new("".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), None);
 
-    let mut lexer = Lexer::new("a".chars());
+    let mut lexer = Lexer::new("a".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(2)));
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), None);
@@ -857,11 +857,11 @@ fn end_of_input_multiple_states() {
         }
     }
 
-    let mut lexer = Lexer::new("".chars());
+    let mut lexer = Lexer::new("".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), None);
 
-    let mut lexer = Lexer::new("a".chars());
+    let mut lexer = Lexer::new("a".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(2)));
     assert_eq!(next(&mut lexer), None);
 }
@@ -949,11 +949,11 @@ fn multiple_lexers_in_scope() {
         'a' = 2,
     }
 
-    let mut lexer = Lexer1::new("a".chars());
+    let mut lexer = Lexer1::new("a".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(1)));
     assert_eq!(next(&mut lexer), None);
 
-    let mut lexer = Lexer2::new("a".chars());
+    let mut lexer = Lexer2::new("a".chars().peekable());
     assert_eq!(next(&mut lexer), Some(Ok(2)));
     assert_eq!(next(&mut lexer), None);
 }

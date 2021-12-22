@@ -98,24 +98,24 @@ pub struct Lexer<Iter: Iterator<Item = char> + Clone, Token, State, Error, Wrapp
 }
 
 impl<I: Iterator<Item = char> + Clone, T, S: Default, E, W> Lexer<I, T, S, E, W> {
-    pub fn new(iter: I) -> Self {
+    pub fn new(iter: Peekable<I>) -> Self {
         Self::new_with_state(iter, Default::default())
     }
 }
 
 impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
-    pub fn new_with_state(iter: I, state: S) -> Self {
+    pub fn new_with_state(iter: Peekable<I>, state: S) -> Self {
         Self::new_with_location_and_state(iter, Loc::ZERO, state)
     }
 
-    pub fn new_with_location_and_state(iter: I, iter_loc: Loc, state: S) -> Self {
+    pub fn new_with_location_and_state(iter: Peekable<I>, iter_loc: Loc, state: S) -> Self {
         Self {
             __state: 0,
             __done: false,
             __initial_state: 0,
             user_state: state,
             iter_loc,
-            iter: iter.peekable(),
+            iter,
             current_match_start: iter_loc,
             current_match_end: iter_loc,
             last_match: None,
