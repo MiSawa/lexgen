@@ -144,16 +144,16 @@ pub fn reify(
         );
 
         impl<I: ::std::iter::Iterator<Item = char> + ::std::clone::Clone> #lexer_name<I> {
-            #visibility fn new(iter: ::std::iter::Peekable<I>) -> Self {
+            #visibility fn new(iter: I) -> Self {
                 #lexer_name(::lexgen_util::Lexer::new(iter))
             }
 
-            #visibility fn new_with_state(iter: ::std::iter::Peekable<I>, user_state: #user_state_type) -> Self {
+            #visibility fn new_with_state(iter: I, user_state: #user_state_type) -> Self {
                 #lexer_name(::lexgen_util::Lexer::new_with_state(iter, user_state))
             }
 
             #visibility fn new_with_location_and_state(
-                iter: ::std::iter::Peekable<I>,
+                iter: I,
                 loc: ::lexgen_util::Loc,
                 user_state: #user_state_type,
             ) -> Self
@@ -659,7 +659,7 @@ fn generate_right_ctx_fns(
         let match_arms = generate_right_ctx_state_arms(ctx, dfa);
 
         fns.push(
-            quote!(fn #fn_name(mut input: std::iter::Peekable<std::str::Chars>) -> bool {
+            quote!(fn #fn_name<I: Iterator<Item=char>>(mut input: std::iter::Peekable<I>) -> bool {
                 let mut state: usize = 0;
 
                 loop {
