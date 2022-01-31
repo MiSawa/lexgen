@@ -1,3 +1,5 @@
+#![allow(clippy::should_implement_trait, clippy::type_complexity)]
+
 use std::iter::Peekable;
 
 use unicode_width::UnicodeWidthChar;
@@ -75,7 +77,7 @@ pub struct Lexer<Iter: Iterator<Item = char> + Clone, Token, State, Error, Wrapp
     // Character iterator. `Peekable` is used in the handler's `peek` method. Note that we can't
     // use byte index returned by this directly, as we re-initialize this field when backtracking.
     // Add `iter_byte_idx` to the byte index before using. When resetting, update `iter_byte_idx`.
-    iter: Peekable<Iter>,
+    pub __iter: Peekable<Iter>,
 
     // Start of the current match
     current_match_start: Loc,
@@ -115,7 +117,7 @@ impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
             __initial_state: 0,
             user_state: state,
             iter_loc,
-            iter,
+            __iter: iter,
             current_match_start: iter_loc,
             current_match_end: iter_loc,
             last_match: None,
@@ -124,7 +126,7 @@ impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
 
     // Read the next chracter
     pub fn next(&mut self) -> Option<char> {
-        match self.iter.next() {
+        match self.__iter.next() {
             None => None,
             Some(char) => {
                 self.current_match_end.byte_idx += char.len_utf8();
@@ -142,7 +144,7 @@ impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
     }
 
     pub fn peek(&mut self) -> Option<char> {
-        self.iter.peek().copied()
+        self.__iter.peek().copied()
     }
 
     // On success returns semantic action function for the last match
@@ -159,7 +161,7 @@ impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
                 self.__done = false;
                 self.current_match_start = match_start;
                 self.current_match_end = match_end;
-                self.iter = iter;
+                self.__iter = iter;
                 self.iter_loc = match_end;
                 Ok(semantic_action)
             }
@@ -176,7 +178,7 @@ impl<I: Iterator<Item = char> + Clone, T, S, E, W> Lexer<I, T, S, E, W> {
     ) {
         self.last_match = Some((
             self.current_match_start,
-            self.iter.clone(),
+            self.__iter.clone(),
             semantic_action_fn,
             self.current_match_end,
         ));

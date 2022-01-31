@@ -1,4 +1,4 @@
-# Unreleased
+# 2022/01/31: 0.9.0
 
 - New regex syntax `#` added for character set difference, e.g. `re1 # re2`
   matches characters in `re1` that are not in `re2`. `re1` and `re2` need to be
@@ -38,6 +38,10 @@
       Custom(E),
   }
   ```
+
+- A new syntax added for right contexts. A right context is basically
+  lookahead, but can only be used in rules and cannot be nested inside regexes.
+  See README for details. (#29)
 
 # 2021/11/30: 0.8.1
 
